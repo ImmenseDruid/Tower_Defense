@@ -21,6 +21,12 @@ def sqrt(x):
 def pythag(x, y):
 	return sqrt(x * x + y * y)
 
+def lerp(x, y, z):
+	return (x * (1-z) + y * (z))
+
+def alerp(x,y,z):
+	return (z - x) / (x + y)
+
 
 
 def create_pathway(nodes, pathway, scale):	
@@ -164,7 +170,7 @@ def create_wave_data():
 		waves.append([])
 		for balloon_type in range(5):
 			amount = wave * wave
-			camo = False
+			camo = False if not wave % 10 == 9 else True
 			waves[wave].append([amount, camo])
 			
 

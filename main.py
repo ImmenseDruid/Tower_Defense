@@ -27,10 +27,8 @@ pygame.init()
 pygame.font.init()
 
 
-
 screen = pygame.display.set_mode((width , height))
 pygame.display.set_caption("Tower Defense Game")
-clock = pygame.time.Clock()
 
 #Tower Stats
 
@@ -88,7 +86,7 @@ balloon_imgs = [pygame.image.load('Images/Balloon_1.png').convert_alpha(), pygam
 camo_img = pygame.image.load('Images/camo.png').convert_alpha()
 camo_img = pygame.transform.scale(camo_img, (int(camo_img.get_width() * scale), int(camo_img.get_height() * scale))).convert_alpha()
 
-pygame.display.set_icon(balloon_imgs[0])
+
 entities.Balloon.IMGS = balloon_imgs
 
 for i in range(len(tower_imgs)):
@@ -226,7 +224,7 @@ class Wave_manager():
 		self.balloon_group = balloon_group
 		self.last_spawn = 0
 		self.wave = 1
-
+		self.spawn_cooldown_reduction = 0
 		self.spawned = 0
 		self.wave_spawn = 10
 		self.difficulty = 1
@@ -241,14 +239,13 @@ class Wave_manager():
 	def update(self):
 		if len(self.balloon_group) == 0 and self.endofwave:
 			self.wave += 1
-			#self.wave_spawn = self.wave_spawn * 2
-			#self.spawned = 0
+			self.spawn_cooldown_reduction = plibrary.lerp(0, 1000, plibrary.alerp(0, 60, self.wave))
 			self.last_wave = pygame.time.get_ticks()
 			self.balloon_type_idx = 0
 			self.endofwave = False
 			
 
-		spawn_timer = pygame.time.get_ticks() - self.last_spawn > self.SPAWN_COOLDOWN
+		spawn_timer = pygame.time.get_ticks() - self.last_spawn > (self.SPAWN_COOLDOWN - self.spawn_cooldown_reduction)
 		wave_timer = pygame.time.get_ticks() - self.last_wave > self.WAVE_DELAY
 
 		if not wave_timer:
@@ -302,6 +299,11 @@ def show_info():
 	draw_text(f'Wave : {wm.wave}', font, TEXT_COL, int(750 * scale), int(20 * scale))
 	draw_text(f'Health : {health}', font, TEXT_COL, int(750 * scale), int(70 * scale))
 	draw_text(f'Money : {money}', font, TEXT_COL, int(750 * scale), int(120 * scale))
+
+
+
+pygame.display.set_icon(balloon_imgs[0])
+clock = pygame.time.Clock()
 
 
 def main():
