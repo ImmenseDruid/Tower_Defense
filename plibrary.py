@@ -160,10 +160,12 @@ def calculate_path_distance(nodes):
 def create_wave_data():
 	waves = []
 
-	for i in range(10):
+	for wave in range(60):
 		waves.append([])
-		for j in range(5):
-			waves[i].append([j, False])
+		for balloon_type in range(5):
+			amount = wave * wave
+			camo = False
+			waves[wave].append([amount, camo])
 			
 
 	with open(os.path.join('waves', f'waves_map_0_data.p'), 'wb') as file:
@@ -175,3 +177,9 @@ def get_wave_data():
 		waves = pickle.load(file)
 
 	return waves
+
+def scale_array(arr, scale):
+	for i in range(len(n)):
+		n[i] = int(n[i] * scale)
+
+	return n

@@ -1213,7 +1213,7 @@ static const char __pyx_k_test[] = "__test__";
 static const char __pyx_k_costs[] = "costs";
 static const char __pyx_k_nodes[] = "nodes";
 static const char __pyx_k_range[] = "range";
-static const char __pyx_k_scale[] = "scale";
+static const char __pyx_k_scale[] = "";
 static const char __pyx_k_append[] = "append";
 static const char __pyx_k_ranges[] = "ranges";
 static const char __pyx_k_library[] = "library";
@@ -1537,7 +1537,7 @@ static float __pyx_f_7library_pythag(float __pyx_v_x, float __pyx_v_y) {
 /* "library.pyx":24
  * 
  * 
- * def create_pathway(nodes, pathway, scale):             # <<<<<<<<<<<<<<
+ * def create_pathway(nodes, pathway, ):             # <<<<<<<<<<<<<<
  * 	cdef int i
  * 	for i in range(len(nodes)):
  */
@@ -1642,7 +1642,7 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
   __Pyx_RefNannySetupContext("create_pathway", 0);
 
   /* "library.pyx":26
- * def create_pathway(nodes, pathway, scale):
+ * def create_pathway(nodes, pathway, ):
  * 	cdef int i
  * 	for i in range(len(nodes)):             # <<<<<<<<<<<<<<
  * 		if i < len(nodes) - 1:
@@ -1882,8 +1882,8 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
  * 
  * 
  * 			if w < h:             # <<<<<<<<<<<<<<
- * 				w += int(20 * scale)
- * 				x -= int(10 * scale)
+ * 				w += int(20 * )
+ * 				x -= int(10 * )
  */
       __pyx_t_7 = PyObject_RichCompare(__pyx_v_w, __pyx_v_h, Py_LT); __Pyx_XGOTREF(__pyx_t_7); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 43, __pyx_L1_error)
       __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_7); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 43, __pyx_L1_error)
@@ -1893,8 +1893,8 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
         /* "library.pyx":44
  * 
  * 			if w < h:
- * 				w += int(20 * scale)             # <<<<<<<<<<<<<<
- * 				x -= int(10 * scale)
+ * 				w += int(20 * )             # <<<<<<<<<<<<<<
+ * 				x -= int(10 * )
  * 			else:
  */
         __pyx_t_7 = PyNumber_Multiply(__pyx_int_20, __pyx_v_scale); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 44, __pyx_L1_error)
@@ -1910,10 +1910,10 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
 
         /* "library.pyx":45
  * 			if w < h:
- * 				w += int(20 * scale)
- * 				x -= int(10 * scale)             # <<<<<<<<<<<<<<
+ * 				w += int(20 * )
+ * 				x -= int(10 * )             # <<<<<<<<<<<<<<
  * 			else:
- * 				h += int(20 * scale)
+ * 				h += int(20 * )
  */
         __pyx_t_7 = PyNumber_Multiply(__pyx_int_10, __pyx_v_scale); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 45, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_7);
@@ -1930,17 +1930,17 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
  * 
  * 
  * 			if w < h:             # <<<<<<<<<<<<<<
- * 				w += int(20 * scale)
- * 				x -= int(10 * scale)
+ * 				w += int(20 * )
+ * 				x -= int(10 * )
  */
         goto __pyx_L8;
       }
 
       /* "library.pyx":47
- * 				x -= int(10 * scale)
+ * 				x -= int(10 * )
  * 			else:
- * 				h += int(20 * scale)             # <<<<<<<<<<<<<<
- * 				y -= int(10 * scale)
+ * 				h += int(20 * )             # <<<<<<<<<<<<<<
+ * 				y -= int(10 * )
  * 
  */
       /*else*/ {
@@ -1957,8 +1957,8 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
 
         /* "library.pyx":48
  * 			else:
- * 				h += int(20 * scale)
- * 				y -= int(10 * scale)             # <<<<<<<<<<<<<<
+ * 				h += int(20 * )
+ * 				y -= int(10 * )             # <<<<<<<<<<<<<<
  * 
  * 			pathway.append((x,y,w,h))
  */
@@ -1976,7 +1976,7 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
       __pyx_L8:;
 
       /* "library.pyx":50
- * 				y -= int(10 * scale)
+ * 				y -= int(10 * )
  * 
  * 			pathway.append((x,y,w,h))             # <<<<<<<<<<<<<<
  * 	return pathway
@@ -2024,7 +2024,7 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
   /* "library.pyx":24
  * 
  * 
- * def create_pathway(nodes, pathway, scale):             # <<<<<<<<<<<<<<
+ * def create_pathway(nodes, pathway, ):             # <<<<<<<<<<<<<<
  * 	cdef int i
  * 	for i in range(len(nodes)):
  */
@@ -5109,7 +5109,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "library.pyx":24
  * 
  * 
- * def create_pathway(nodes, pathway, scale):             # <<<<<<<<<<<<<<
+ * def create_pathway(nodes, pathway, ):             # <<<<<<<<<<<<<<
  * 	cdef int i
  * 	for i in range(len(nodes)):
  */
@@ -5441,7 +5441,7 @@ if (!__Pyx_RefNanny) {
   /* "library.pyx":24
  * 
  * 
- * def create_pathway(nodes, pathway, scale):             # <<<<<<<<<<<<<<
+ * def create_pathway(nodes, pathway, ):             # <<<<<<<<<<<<<<
  * 	cdef int i
  * 	for i in range(len(nodes)):
  */

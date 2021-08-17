@@ -1,6 +1,7 @@
 import pygame
 import entities
 import random
+import pickle, os
 import library, plibrary
 from pygame.locals import *
 
@@ -31,8 +32,6 @@ screen = pygame.display.set_mode((width , height))
 pygame.display.set_caption("Tower Defense Game")
 clock = pygame.time.Clock()
 
-plibrary.create_wave_data()
-
 #Tower Stats
 
 
@@ -53,9 +52,15 @@ button_background = pygame.transform.scale(button_background, (int(button_backgr
 pathway_sprite_sheet = pygame.image.load('Images/Pathways.png').convert()
 pathway_imgs = []
 
-nodes = [[int(0 * scale), int(50 * scale)], [int(100 * scale), int(50 * scale)], [int(500 * scale), int(50 * scale)], [int(500 * scale), int(200 * scale)], [int(450 * scale), int(200 * scale)],
- [int(450 * scale), int(100 * scale)], [int(100 * scale), int(100 * scale)], [int(100 * scale), int(400 * scale)], [int(400 * scale), int(400 * scale)],
- [int(400 * scale), int(500 * scale)], [int(0 * scale), int(500 * scale)], [int(-50 * scale), int(500 * scale)]]
+with open(os.path.join('Levels', f'map_0_data.p'), 'rb') as file:
+	data = pickle.load(file)
+
+for n in data:
+	for i in range(len(n)):
+		n[i] = int(n[i] * scale)
+
+nodes = data
+
 pathway = []
 
 path_distance = library.calculate_path_distance(nodes)
@@ -226,8 +231,9 @@ class Wave_manager():
 		self.wave_data = plibrary.get_wave_data()
 		self.last_wave = -self.WAVE_DELAY
 		self.endofwave = False
-		self.i = 0
-		self.j = 0
+		self.balloon_type_idx = 0
+		self.counter = 0
+		
 		
 
 	def update(self):
@@ -236,8 +242,7 @@ class Wave_manager():
 			#self.wave_spawn = self.wave_spawn * 2
 			#self.spawned = 0
 			self.last_wave = pygame.time.get_ticks()
-			self.i = self.i + 1
-			self.j = range(len(self.wave_data[i]))
+			self.balloon_type_idx = 0
 			self.endofwave = False
 			
 
@@ -248,13 +253,19 @@ class Wave_manager():
 			draw_text("Wave Complete", font_60, WHITE, int(300 * scale), int(scale * 300))
 
 		if self.wave_data:
-			if spawn_timer and wave_timer:
-				
-				self.balloon_group.add(entities.Balloon(spawn[0], spawn[1], random.randrange(1, 5), nodes, path_distance, self.wave_data[i][j][1], camo_img))
+			if spawn_timer and wave_timer and not self.endofwave:
+							
+				self.balloon_group.add(entities.Balloon(spawn[0], spawn[1], self.balloon_type_idx + 1, nodes, path_distance, self.wave_data[self.wave][self.balloon_type_idx][1], camo_img))
 				self.last_spawn = pygame.time.get_ticks()
-				self.j = self.j + 1
-			if self.j >= len(self.wave_data[i]) - 1:
-				self.endofwave = True
+				
+				self.counter += 1
+				if self.counter >= self.wave_data[self.wave][self.balloon_type_idx][0]:
+					self.counter = 0
+					self.balloon_type_idx += 1
+
+				if self.balloon_type_idx >= len(self.wave_data[self.wave]):
+					self.endofwave = True
+			
 			
 
 pathway_sheet = SpriteSheet(pathway_sprite_sheet, (10, 10))
@@ -349,7 +360,7 @@ def main():
 
 		for b in balloon_group:
 			b.draw(screen)
-			print((id(b.camo)))
+			#print((id(b.camo)))
 		bullet_group.draw(screen)
 
 		for particle in particle_group:
