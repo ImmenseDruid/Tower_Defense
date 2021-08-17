@@ -1,11 +1,18 @@
 import pygame, pickle, math
 import random
+
 def limit(x, y, z):
 	if x < y:
 		x = y 
 	if x > z:
 		x = z 
 	return x
+
+def pythag(dist1, dist2):
+	return  math.sqrt(dist1 * dist1 + dist2 * dist2)
+
+def health_to_speed(x):
+	return x 
 
 class Particle():
 	def __init__(self, pos, v, img = None, life_time = 300):
@@ -61,7 +68,7 @@ class Entity(pygame.sprite.Sprite):
 
 
 class Tower(Entity):
-	def __init__(self, pos, imgs = None, bullet_img = None, tower_range = 300, attack_speed = 1500, projectile_settings = None):
+	def __init__(self, pos, imgs = None, bullet_img = None, tower_range = 300, attack_speed = 1500, tower_can_see_camo = False, projectile_settings = None):
 		x = pos[0]
 		y = pos[1]
 		if not imgs:
@@ -81,17 +88,28 @@ class Tower(Entity):
 		self.level = 1 
 		self.max_level = len(imgs)
 		self.imgs = imgs
-		self.projectile_settings= projectile_settings
+		self.projectile_settings = projectile_settings
+		self.can_see_camo = tower_can_see_camo
 		img = self.imgs[self.level - 1]
 		super().__init__(x, y, img)
 
 	def update(self, enemy_group, bullet_group):
 		self.target_aquired = False
+		max_percent = 0
+		target = None
 		for e in enemy_group:
 			target_x, target_y = e.rect.center
-			if math.sqrt((target_x - self.rect.center[0]) * (target_x - self.rect.center[0]) + (target_y - self.rect.center[1]) * (target_y - self.rect.center[1])) < self.range + (self.range // 10 * (self.level - 1)):
-				self.target_aquired = True 
-				break
+			if (e.camo and self.can_see_camo) or not e.camo:
+				if pythag((target_x - self.rect.center[0]), (target_y - self.rect.center[1])) < self.range + (self.range // 10 * (self.level - 1)):
+					if e.percent > max_percent:
+						max_percent = e.percent
+						target = e
+						self.target_aquired = True
+		
+		if self.target_aquired:		
+			target_x, target_y = target.rect.center
+		
+
 
 		if self.target_aquired and pygame.time.get_ticks() - self.fired_last > self.fire_cooldown - (0.25 * self.fire_cooldown * (self.level - 1)):
 			pos = (target_x, target_y)
@@ -185,25 +203,32 @@ class Bullet(Entity):
 class Balloon(Entity):
 
 	ACCEPTABLE_RANGE = 1
+	IMGS = None
 
-	def __init__(self, x, y, imgs, health, path):
+	def __init__(self, x, y, health, path, path_dist, camo, camo_img):
 		
-		self.imgs = imgs
-		super().__init__(x, y, imgs[health - 1])
+		
+		super().__init__(x, y, self.IMGS[health - 1])
 		self.path = path
 		self.target_idx = 0
 		self.target = self.path[0]
-		self.speed = 1
+		self.speed = health_to_speed(health)
 		self.alive = True
 		self.health = health
 		self.rect.center = (self.x, self.y)
 		self.particles = []
 		self.dx = 0 
 		self.dy = 0 
+		self.path_dist = path_dist
+		self.distance = 0
+		self.percent = 0 
+		self.camo = camo
+		self.camo_img = camo_img
 		
 	def damage(self):
 		self.health -= 1
-		self.image = self.imgs[limit(self.health - 1, 0, len(self.imgs) - 1)]
+		self.speed = health_to_speed(self.health)
+		self.image = self.IMGS[limit(self.health - 1, 0, len(self.IMGS) - 1)]
 		for i in range(10):
 			self.particles.append(Particle([self.x, self.y], [random.random() * 2 - 1 + self.dx, random.random() * 2 - 1 + self.dy]))
 		if self.health <= 0:
@@ -237,13 +262,16 @@ class Balloon(Entity):
 
 			self.x += self.dx 
 			self.y += self.dy
-
+			self.distance += abs(self.dx)
+			self.percent = self.distance / self.path_dist
 			self.rect.center = [self.x, self.y]
 
 		return health	
 
 	def draw(self, screen):
 		screen.blit(self.image, self.rect.topleft)
+		if self.camo:
+			screen.blit(self.camo_img, self.rect.topleft)
 		for p in self.particles:
 			p.draw(screen)
 

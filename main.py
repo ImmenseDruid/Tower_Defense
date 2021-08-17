@@ -1,5 +1,7 @@
 import pygame
 import entities
+import random
+import library, plibrary
 from pygame.locals import *
 
 
@@ -26,20 +28,21 @@ pygame.font.init()
 
 
 screen = pygame.display.set_mode((width , height))
+pygame.display.set_caption("Tower Defense Game")
 clock = pygame.time.Clock()
 
+plibrary.create_wave_data()
+
+#Tower Stats
 
 
-
-
-
-#Tower Costs
-
-tower_costs = [55, 100]
-tower_ranges = [250, 350]
-tower_attack_cooldown = [1000, 2000]
+tower_ranges = [250, 350, 200, 250]
+tower_attack_cooldown = [1000, 2000, 1500, 1000]
+tower_can_see_camo = [False, True, False, True]
 #projectile settings per tower [explosion radius, pierce]
-tower_projectile_settings = [[0, 2], [100, 0]]
+tower_projectile_settings = [[0, 2], [100, 0], [200, 0], [0, 0]]
+
+tower_costs = library.determine_pricing(tower_ranges, tower_attack_cooldown, tower_can_see_camo, tower_projectile_settings)
 
 
 #Images
@@ -50,42 +53,14 @@ button_background = pygame.transform.scale(button_background, (int(button_backgr
 pathway_sprite_sheet = pygame.image.load('Images/Pathways.png').convert()
 pathway_imgs = []
 
-bullet_1_img = pygame.image.load('Images/Bullet_1.png').convert_alpha()
-bullet_1_img.set_colorkey((0,0,0))
-bullet_2_img = pygame.image.load('Images/Bullet_2.png').convert_alpha()
-bullet_2_img = pygame.transform.scale(bullet_2_img, (8, 8))
-bullet_2_img.set_colorkey((0,0,0))
-
-balloon_base_img = pygame.image.load('Images/Balloon_1.png').convert_alpha()
-
 nodes = [[int(0 * scale), int(50 * scale)], [int(100 * scale), int(50 * scale)], [int(500 * scale), int(50 * scale)], [int(500 * scale), int(200 * scale)], [int(450 * scale), int(200 * scale)],
  [int(450 * scale), int(100 * scale)], [int(100 * scale), int(100 * scale)], [int(100 * scale), int(400 * scale)], [int(400 * scale), int(400 * scale)],
  [int(400 * scale), int(500 * scale)], [int(0 * scale), int(500 * scale)], [int(-50 * scale), int(500 * scale)]]
 pathway = []
 
-for i in range(len(nodes)):
-	if i < len(nodes) - 1:
-		x = 0
-		y = 0
-		if nodes[i][0] < nodes[i + 1][0]:
-			x = nodes[i][0]
-		else:
-			x = nodes[i + 1][0]
-		if nodes[i][1] < nodes[i + 1][1]:
-			y = nodes[i][1]
-		else:
-			y = nodes[i + 1][1]
-		w = abs(nodes[i][0] - nodes[i + 1][0])
-		h = abs(nodes[i][1] - nodes[i + 1][1])
+path_distance = library.calculate_path_distance(nodes)
 
-		if w < h:
-			w += int(20 * scale)
-			x -= int(10 * scale)
-		else:
-			h += int(20 * scale)
-			y -= int(10 * scale)
-
-		pathway.append(pygame.Rect((x, y), (w, h)))
+pathway = library.create_pathway(nodes, pathway, scale)
 
 spawn = [int(-10 * scale), int(50 * scale)]
 
@@ -95,9 +70,19 @@ font_60 = pygame.font.SysFont('Times New Roman', 60)
 
 
 tower_imgs = [[pygame.image.load('Images/Tower1.png').convert_alpha(), pygame.image.load('Images/Tower1_upgrade.png').convert_alpha(), pygame.image.load('Images/Tower1_upgrade_2.png').convert_alpha()],
- [pygame.image.load('Images/Tower_2_no_cape.png').convert_alpha(), pygame.image.load('Images/Tower_2_no_hat.png').convert_alpha(), pygame.image.load('Images/Tower_2.png').convert_alpha()]]
-bullet_imgs = [bullet_1_img, bullet_2_img]
-balloon_imgs = [pygame.image.load('Images/Balloon_1.png').convert_alpha(), pygame.image.load('Images/Balloon_2.png').convert_alpha(), pygame.image.load('Images/Balloon_3.png').convert_alpha(), pygame.image.load('Images/Balloon_4.png').convert_alpha()]
+ [pygame.image.load('Images/Tower_2_no_cape.png').convert_alpha(), pygame.image.load('Images/Tower_2_no_hat.png').convert_alpha(), pygame.image.load('Images/Tower_2.png').convert_alpha()],
+ [pygame.image.load('Images/Tower_3.png').convert_alpha(), pygame.image.load('Images/Tower_3_upgrade.png').convert_alpha(), pygame.image.load('Images/Tower_3_upgrade_2.png').convert_alpha()],
+ [pygame.image.load('Images/Tower_4.png').convert_alpha(), pygame.image.load('Images/Tower_4_upgrade.png').convert_alpha(), pygame.image.load('Images/Tower_4_upgrade_2.png').convert_alpha()]]
+bullet_imgs = [pygame.image.load('Images/Bullet_1.png').convert_alpha(), pygame.transform.scale(pygame.image.load('Images/Bullet_2.png').convert_alpha(), (8, 8)),
+ pygame.transform.scale(pygame.image.load('Images/Bullet_3.png').convert_alpha(), (8, 8)), pygame.transform.scale(pygame.image.load('Images/Bullet_4.png').convert_alpha(), (8, 8))]
+balloon_imgs = [pygame.image.load('Images/Balloon_1.png').convert_alpha(), pygame.image.load('Images/Balloon_2.png').convert_alpha(), pygame.image.load('Images/Balloon_3.png').convert_alpha(),
+ pygame.image.load('Images/Balloon_4.png').convert_alpha(), pygame.image.load('Images/Balloon_5.png').convert_alpha()]
+
+camo_img = pygame.image.load('Images/camo.png').convert_alpha()
+camo_img = pygame.transform.scale(camo_img, (int(camo_img.get_width() * scale), int(camo_img.get_height() * scale))).convert_alpha()
+
+
+entities.Balloon.IMGS = balloon_imgs
 
 for i in range(len(tower_imgs)):
 	for j in range(len(tower_imgs[i])):
@@ -147,6 +132,7 @@ class Button():
 
 		self.clicked = False
 		self.enabled = True
+		self.hovered = False
 
 		if img:
 			self.img = img
@@ -168,11 +154,13 @@ class Button():
 	def set_color(self, hover, clicked, action, base):		self.color = base
 
 	def draw(self, screen):
+
 		rect = pygame.Rect((self.x, self.y), self.size)
 		pos = pygame.mouse.get_pos()
 
 		
 		col = self.color
+
 
 
 		action = False
@@ -181,8 +169,12 @@ class Button():
 		#Blit image to button
 		surf.blit(self.img, (self.size[0] // 2 - self.img.get_rect().w // 2 , self.size[1] // 2 - self.img.get_rect().h // 2))
 		coloring_surface = pygame.Surface(self.size)
-		if rect.collidepoint(pos) and self.enabled:
 
+		self.hovered = rect.collidepoint(pos)
+
+
+		if self.hovered and self.enabled:
+			
 			if pygame.mouse.get_pressed()[0] == 1:
 				self.clicked = True
 				col = self.CLICKED_COL
@@ -202,6 +194,7 @@ class Button():
 				col = self.ACTION_COL
 				pygame.draw.rect(coloring_surface, (250,250,250), ((0,0), self.size))
 		
+
 		if False:
 			#Create Border
 			
@@ -230,17 +223,22 @@ class Wave_manager():
 		self.spawned = 0
 		self.wave_spawn = 10
 		self.difficulty = 1
-
+		self.wave_data = plibrary.get_wave_data()
 		self.last_wave = -self.WAVE_DELAY
+		self.endofwave = False
+		self.i = 0
+		self.j = 0
 		
 
 	def update(self):
-		if len(self.balloon_group) == 0 and self.spawned >= self.wave_spawn:
+		if len(self.balloon_group) == 0 and self.endofwave:
 			self.wave += 1
-
-			self.wave_spawn = self.wave_spawn * 2
-			self.spawned = 0
+			#self.wave_spawn = self.wave_spawn * 2
+			#self.spawned = 0
 			self.last_wave = pygame.time.get_ticks()
+			self.i = self.i + 1
+			self.j = range(len(self.wave_data[i]))
+			self.endofwave = False
 			
 
 		spawn_timer = pygame.time.get_ticks() - self.last_spawn > self.SPAWN_COOLDOWN
@@ -249,10 +247,14 @@ class Wave_manager():
 		if not wave_timer:
 			draw_text("Wave Complete", font_60, WHITE, int(300 * scale), int(scale * 300))
 
-		if self.spawned < self.wave_spawn and spawn_timer and wave_timer:
-			self.balloon_group.add(entities.Balloon(spawn[0], spawn[1], balloon_imgs, 4, nodes))
-			self.spawned += 1
-			self.last_spawn = pygame.time.get_ticks()
+		if self.wave_data:
+			if spawn_timer and wave_timer:
+				
+				self.balloon_group.add(entities.Balloon(spawn[0], spawn[1], random.randrange(1, 5), nodes, path_distance, self.wave_data[i][j][1], camo_img))
+				self.last_spawn = pygame.time.get_ticks()
+				self.j = self.j + 1
+			if self.j >= len(self.wave_data[i]) - 1:
+				self.endofwave = True
 			
 
 pathway_sheet = SpriteSheet(pathway_sprite_sheet, (10, 10))
@@ -260,22 +262,18 @@ pathway_sheet = SpriteSheet(pathway_sprite_sheet, (10, 10))
 for i in range(int(pathway_sprite_sheet.get_width() / pathway_sheet.size[0])):
 	pathway_imgs.append(pathway_sheet.get_sprite(i, 0, scale))
 
-print(len(pathway_imgs))
-
-
 balloon_group = pygame.sprite.Group()
 tower_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 particle_group = []
 
-button_0_img = pygame.Surface((int(48 * scale), int(48 * scale)))
-button_0_img.blit(button_background, (0,0))
-button_0_img.blit(tower_imgs[0][0], (0,0))
+def create_tower_button_img(tower_img):
+	img = pygame.Surface((int(48 * scale), int(48 * scale)))
+	img.blit(button_background, (0,0))
+	img.blit(tower_imgs[tower_img][0], (0,0))
+	return img
 
 
-button_1_img = pygame.Surface((int(48 * scale), int(48 * scale)))
-button_1_img.blit(button_background, (0,0))
-button_1_img.blit(tower_imgs[1][0], (0,0))
 
 button_upgrade_img = pygame.image.load('Images/Button_Upgrade.png').convert()
 button_upgrade_img = pygame.transform.scale(button_upgrade_img, (int(button_upgrade_img.get_width() * scale), int(button_upgrade_img.get_height() * scale))).convert_alpha()
@@ -286,31 +284,32 @@ health = 100
 money = 250
 score = 0 
 wm = Wave_manager(balloon_group)
-
-
 		
 def show_info():
 	draw_text(f'Wave : {wm.wave}', font, TEXT_COL, int(750 * scale), int(20 * scale))
 	draw_text(f'Health : {health}', font, TEXT_COL, int(750 * scale), int(70 * scale))
 	draw_text(f'Money : {money}', font, TEXT_COL, int(750 * scale), int(120 * scale))
 
+
 def main():
 	run = True
 	global money, score, wm, health, pathway
 
 	#Tower Buttons
-	tower_0_button = Button(int(20 * scale), int(620 * scale), (25, 25), img = button_0_img)
-	tower_1_button = Button(int(70 * scale), int(620 * scale), (25, 25), img = button_1_img)
-
+	tower_buttons = [Button(int(20 * scale), int(620 * scale), (25, 25), img = create_tower_button_img(0)),
+		Button(int(70 * scale), int(620 * scale), (25, 25), img = create_tower_button_img(1)),
+		Button(int(120 * scale), int(620 * scale), (25, 25), img = create_tower_button_img(2)),
+		Button(int(170 * scale), int(620 * scale), (25, 25), img = create_tower_button_img(3))]
 
 	#Upgrade / Sell Button
 	upgrade_button = Button(int(650 * scale), int(425 * scale), (200, 50), img = button_upgrade_img)
 	sell_button = Button(int(650 * scale), int(525 * scale), (200, 50), img = button_sell_img)
 
-
 	tower_to_place = None
 	tower_selected = None
 	clicked_at = None
+
+	pathway_display = library.create_array_to_display_pathway(nodes, pathway_imgs)
 
 	while run:
 		clock.tick(60)
@@ -320,97 +319,9 @@ def main():
 			if event.type == QUIT:
 				run = False
 
-		
-
 		#Draw Pathway
-		#for node in nodes:
-		#	pygame.draw.circle(screen, WHITE, node, 10)
-		
-		for i in range(len(nodes)):
-			if i < len(nodes) - 1:
-				x = 0
-				y = 0
-				if nodes[i][0] < nodes[i + 1][0]:
-					x = nodes[i][0]
-				else:
-					x = nodes[i + 1][0]
-				if nodes[i][1] < nodes[i + 1][1]:
-					y = nodes[i][1]
-				else:
-					y = nodes[i + 1][1]
-				w = abs(nodes[i][0] - nodes[i + 1][0])
-				h = abs(nodes[i][1] - nodes[i + 1][1])
-
-				if w < h:
-					y += pathway_imgs[0].get_height()				
-					y_i = y
-					while y < h + y_i - pathway_imgs[0].get_height():
-						screen.blit(pathway_imgs[1], (x - pathway_imgs[0].get_width() // 2, y - pathway_imgs[0].get_height() // 2))
-						y += pathway_imgs[0].get_height()
-				else:
-					x += pathway_imgs[0].get_width()
-					x_i = x
-					while x < w + x_i - pathway_imgs[0].get_width():
-						screen.blit(pathway_imgs[0], (x - pathway_imgs[0].get_width() // 2, y - pathway_imgs[0].get_height() // 2))
-						x += pathway_imgs[0].get_width()
-
-				if i < len(nodes) - 2:
-					current_node = nodes[i]
-					next_node = nodes[i + 1]
-					look_ahead_node = nodes[i + 2]
-
-					if current_node[0] < next_node[0]:
-						if next_node[0] < look_ahead_node[0]:
-							#continue straight	
-							screen.blit(pathway_imgs[0], (next_node[0] - pathway_imgs[0].get_width() // 2, next_node[1] - pathway_imgs[0].get_height() // 2))
-						if next_node[1] < look_ahead_node[1]:
-							#left -> down
-							screen.blit(pathway_imgs[2], (next_node[0] - pathway_imgs[0].get_width() // 2, next_node[1] - pathway_imgs[0].get_height() // 2))
-						if next_node[1] > look_ahead_node[1]:
-							#left -> up
-							screen.blit(pathway_imgs[3], (next_node[0] - pathway_imgs[0].get_width() // 2, next_node[1] - pathway_imgs[0].get_height() // 2))
-
-					elif current_node[0] > next_node[0]:
-						if next_node[0] > look_ahead_node[0]:
-							#continue straight
-							screen.blit(pathway_imgs[0], (next_node[0] - pathway_imgs[0].get_width() // 2, next_node[1] - pathway_imgs[0].get_height() // 2))
-						if next_node[1] < look_ahead_node[1]:
-							#right -> down
-							screen.blit(pathway_imgs[5], (next_node[0] - pathway_imgs[0].get_width() // 2, next_node[1] - pathway_imgs[0].get_height() // 2))
-						if next_node[1] > look_ahead_node[1]:
-							#right -> up
-							screen.blit(pathway_imgs[4], (next_node[0] - pathway_imgs[0].get_width() // 2, next_node[1] - pathway_imgs[0].get_height() // 2))
-
-					
-					if current_node[1] < next_node[1]:
-						if next_node[1] < look_ahead_node[1]:
-							screen.blit(pathway_imgs[1], (next_node[0] - pathway_imgs[0].get_width() // 2, next_node[1] - pathway_imgs[0].get_height() // 2))
-						if next_node[0] < look_ahead_node[0]:
-							#down -> Right
-							screen.blit(pathway_imgs[4], (next_node[0] - pathway_imgs[0].get_width() // 2, next_node[1] - pathway_imgs[0].get_height() // 2))
-						if next_node[0] > look_ahead_node[0]:
-							#down -> left
-							screen.blit(pathway_imgs[3], (next_node[0] - pathway_imgs[0].get_width() // 2, next_node[1] - pathway_imgs[0].get_height() // 2))
-					elif current_node[1] > next_node[1]:
-						if next_node[1] > look_ahead_node[1]:
-							screen.blit(pathway_imgs[1], (next_node[0] - pathway_imgs[0].get_width() // 2, next_node[1] - pathway_imgs[0].get_height() // 2))
-						if next_node[0] < look_ahead_node[0]:
-							#up -> Right
-							screen.blit(pathway_imgs[5], (next_node[0] - pathway_imgs[0].get_width() // 2, next_node[1] - pathway_imgs[0].get_height() // 2))
-						if next_node[0] > look_ahead_node[0]:
-							#up -> left
-							screen.blit(pathway_imgs[2], (next_node[0] - pathway_imgs[0].get_width() // 2, next_node[1] - pathway_imgs[0].get_height() // 2))
-
-				#if nodes[i][0] < nodes[i + 1][0] and w > h:
-				#	screen.blit(pathway_imgs[0], (x, y))
-				#	
-
-				#if nodes[i][0] > nodes[i + 1][0] and w > h:
-				#	screen.blit(pathway_imgs[0], (x, y))
-					
-
-
-
+		for pic in pathway_display:
+			screen.blit(pic[0], pic[1])			
 
 		wm.update()
 
@@ -429,8 +340,6 @@ def main():
 			if not clicked:
 				tower_selected = None
 
-		
-
 		if tower_selected:
 			tower_selected.draw(screen)
 
@@ -440,19 +349,16 @@ def main():
 
 		for b in balloon_group:
 			b.draw(screen)
+			print((id(b.camo)))
 		bullet_group.draw(screen)
 
 		for particle in particle_group:
 			particle.draw(screen)
 
-
 		for b in balloon_group:
 			health = b.update(health, particle_group)
 
 
-		#tower_group.draw(screen)
-
-		
 		tower_group.update(balloon_group, bullet_group)
 
 		for bullet in bullet_group:
@@ -509,40 +415,32 @@ def main():
 			
 			screen.blit(img, (pos[0] - size[0] // 2, pos[1] - size[1] // 2))
 			if pygame.mouse.get_pressed()[0] and not colliding_with_pathway and not colliding_with_towers and pos[0] < int(600 * scale) and pos[0] > 0 and pos[1] > 0 and pos[1] < int(600 * scale): 
-				tower_group.add(entities.Tower((pos[0] - size[0] // 2, pos[1] - size[1] // 2), tower_imgs[tower_to_place], bullet_imgs[tower_to_place], tower_ranges[tower_to_place], tower_attack_cooldown[tower_to_place], tower_projectile_settings[tower_to_place]))
+				tower_group.add(entities.Tower((pos[0] - size[0] // 2, pos[1] - size[1] // 2), tower_imgs[tower_to_place], bullet_imgs[tower_to_place], tower_ranges[tower_to_place], tower_attack_cooldown[tower_to_place], tower_can_see_camo[tower_to_place],tower_projectile_settings[tower_to_place]))
 				money -= tower_costs[tower_to_place]
 				tower_to_place = None 
 				
 			elif pygame.mouse.get_pressed()[2]:
 				tower_to_place = None
 
-		if tower_0_button.draw(screen):
-			if money >= tower_costs[0]:
-				tower_to_place = 0
-		if tower_1_button.draw(screen):
-			if money >= tower_costs[1]:
-				tower_to_place = 1
-	
+		for i in range(len(tower_buttons)):
+			if tower_buttons[i].draw(screen):
+				if money > tower_costs[i]:
+					tower_to_place = i
 
-		if money < tower_costs[0]:
-			tower_0_button.enabled = False
-		else:
-			tower_0_button.enabled = True
+			if tower_buttons[i].hovered:
+				draw_text(f'Price : {tower_costs[i]}', font, TEXT_COL, int(750 * scale), int(300 * scale))
+		
+			if money < tower_costs[i]:
+				tower_buttons[i].enabled = False
+			else:
+				tower_buttons[i].enabled = True
 
-		if money < tower_costs[1]:
-			tower_1_button.enabled = False
-		else:
-			tower_1_button.enabled = True
-			
 		if money < 100:
 			upgrade_button.enabled = False
 		else:
 			upgrade_button.enabled = True
 
-		#for i in pathway_imgs:
-		#	screen.blit(i, (10, 10))
-
-
+		
 		pygame.display.update()
 
 if __name__ == '__main__':

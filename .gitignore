@@ -1,0 +1,5 @@
+*.pyx
+*.pyd
+setup.py
+**/build
+*.spec
