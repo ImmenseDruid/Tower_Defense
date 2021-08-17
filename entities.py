@@ -12,6 +12,8 @@ def pythag(dist1, dist2):
 	return  math.sqrt(dist1 * dist1 + dist2 * dist2)
 
 def health_to_speed(x):
+	if x < 1:
+		x = 1
 	return x 
 
 class Particle():
@@ -146,13 +148,14 @@ class Tower(Entity):
 
 
 class Bullet(Entity):
-	def __init__(self, x, y, angle, img = None, explosion_radius = 0, pierce = 0):
+	def __init__(self, x, y, angle, img = None, explosion_radius = 0, pierce = 0, slow_amount = 0):
 		if not img:
 			size = (25, 25)
 			img = pygame.Surface(size)
 			pygame.draw.rect(img, (0, 0, 255), ((0,0), size))
 		self.pierce = pierce
 		self.explosion_radius = explosion_radius
+		self.slow_amount = slow_amount
 		self.angle = math.radians(angle)
 		self.speed = 10 
 		self.dx = math.cos(self.angle) * self.speed
@@ -174,6 +177,7 @@ class Bullet(Entity):
 
 		for balloon in collide_list:
 			balloon.damage()
+			balloon.slow(self.slow_amount)
 			money += 1
 			score += 1
 			self.pierce -= 1
@@ -233,6 +237,11 @@ class Balloon(Entity):
 			self.particles.append(Particle([self.x, self.y], [random.random() * 2 - 1 + self.dx, random.random() * 2 - 1 + self.dy]))
 		if self.health <= 0:
 			self.alive = False
+
+	def slow(self, amount):
+		self.speed = health_to_speed(self.health - 2)
+		
+
 
 	def update(self, health, particle_group):
 		if not self.alive:

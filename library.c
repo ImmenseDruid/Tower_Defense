@@ -1097,6 +1097,16 @@ static PyObject* __Pyx_PyInt_FloorDivideObjC(PyObject *op1, PyObject *op2, long 
     (inplace ? PyNumber_InPlaceFloorDivide(op1, op2) : PyNumber_FloorDivide(op1, op2))
 #endif
 
+/* SetItemInt.proto */
+#define __Pyx_SetItemInt(o, i, v, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
+    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
+    __Pyx_SetItemInt_Fast(o, (Py_ssize_t)i, v, is_list, wraparound, boundscheck) :\
+    (is_list ? (PyErr_SetString(PyExc_IndexError, "list assignment index out of range"), -1) :\
+               __Pyx_SetItemInt_Generic(o, to_py_func(i), v)))
+static int __Pyx_SetItemInt_Generic(PyObject *o, PyObject *j, PyObject *v);
+static CYTHON_INLINE int __Pyx_SetItemInt_Fast(PyObject *o, Py_ssize_t i, PyObject *v,
+                                               int is_list, int wraparound, int boundscheck);
+
 /* PyDictVersioning.proto */
 #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_TYPE_SLOTS
 #define __PYX_DICT_VERSION_INIT  ((PY_UINT64_T) -1)
@@ -1198,6 +1208,7 @@ static PyObject *__pyx_builtin_range;
 static const char __pyx_k_c[] = "c";
 static const char __pyx_k_h[] = "h";
 static const char __pyx_k_i[] = "i";
+static const char __pyx_k_n[] = "n";
 static const char __pyx_k_w[] = "w";
 static const char __pyx_k_x[] = "x";
 static const char __pyx_k_y[] = "y";
@@ -1213,7 +1224,7 @@ static const char __pyx_k_test[] = "__test__";
 static const char __pyx_k_costs[] = "costs";
 static const char __pyx_k_nodes[] = "nodes";
 static const char __pyx_k_range[] = "range";
-static const char __pyx_k_scale[] = "";
+static const char __pyx_k_scale[] = "scale";
 static const char __pyx_k_append[] = "append";
 static const char __pyx_k_ranges[] = "ranges";
 static const char __pyx_k_library[] = "library";
@@ -1227,6 +1238,7 @@ static const char __pyx_k_next_node[] = "next_node";
 static const char __pyx_k_prev_node[] = "prev_node";
 static const char __pyx_k_get_height[] = "get_height";
 static const char __pyx_k_library_pyx[] = "library.pyx";
+static const char __pyx_k_scale_array[] = "scale_array";
 static const char __pyx_k_attack_speed[] = "attack_speed";
 static const char __pyx_k_current_node[] = "current_node";
 static const char __pyx_k_pathway_imgs[] = "pathway_imgs";
@@ -1260,6 +1272,7 @@ static PyObject *__pyx_kp_s_library_pyx;
 static PyObject *__pyx_n_s_lim;
 static PyObject *__pyx_n_s_look_ahead_node;
 static PyObject *__pyx_n_s_main;
+static PyObject *__pyx_n_s_n;
 static PyObject *__pyx_n_s_name;
 static PyObject *__pyx_n_s_next_node;
 static PyObject *__pyx_n_s_node;
@@ -1272,6 +1285,7 @@ static PyObject *__pyx_n_s_projectile_settings;
 static PyObject *__pyx_n_s_range;
 static PyObject *__pyx_n_s_ranges;
 static PyObject *__pyx_n_s_scale;
+static PyObject *__pyx_n_s_scale_array;
 static PyObject *__pyx_n_s_see_camo;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_w;
@@ -1283,6 +1297,7 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
 static PyObject *__pyx_pf_7library_2create_array_to_display_pathway(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_nodes, PyObject *__pyx_v_pathway_imgs); /* proto */
 static PyObject *__pyx_pf_7library_4determine_pricing(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_ranges, PyObject *__pyx_v_attack_speed, PyObject *__pyx_v_see_camo, PyObject *__pyx_v_projectile_settings); /* proto */
 static PyObject *__pyx_pf_7library_6calculate_path_distance(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_nodes); /* proto */
+static PyObject *__pyx_pf_7library_8scale_array(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_n, float __pyx_v_scale); /* proto */
 static PyObject *__pyx_float_0_3;
 static PyObject *__pyx_float_0_025;
 static PyObject *__pyx_int_0;
@@ -1294,10 +1309,12 @@ static PyObject *__pyx_tuple_;
 static PyObject *__pyx_tuple__3;
 static PyObject *__pyx_tuple__5;
 static PyObject *__pyx_tuple__7;
+static PyObject *__pyx_tuple__9;
 static PyObject *__pyx_codeobj__2;
 static PyObject *__pyx_codeobj__4;
 static PyObject *__pyx_codeobj__6;
 static PyObject *__pyx_codeobj__8;
+static PyObject *__pyx_codeobj__10;
 /* Late includes */
 
 /* "library.pyx":1
@@ -1537,7 +1554,7 @@ static float __pyx_f_7library_pythag(float __pyx_v_x, float __pyx_v_y) {
 /* "library.pyx":24
  * 
  * 
- * def create_pathway(nodes, pathway, ):             # <<<<<<<<<<<<<<
+ * def create_pathway(nodes, pathway, scale):             # <<<<<<<<<<<<<<
  * 	cdef int i
  * 	for i in range(len(nodes)):
  */
@@ -1642,7 +1659,7 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
   __Pyx_RefNannySetupContext("create_pathway", 0);
 
   /* "library.pyx":26
- * def create_pathway(nodes, pathway, ):
+ * def create_pathway(nodes, pathway, scale):
  * 	cdef int i
  * 	for i in range(len(nodes)):             # <<<<<<<<<<<<<<
  * 		if i < len(nodes) - 1:
@@ -1882,8 +1899,8 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
  * 
  * 
  * 			if w < h:             # <<<<<<<<<<<<<<
- * 				w += int(20 * )
- * 				x -= int(10 * )
+ * 				w += int(20 * scale)
+ * 				x -= int(10 * scale)
  */
       __pyx_t_7 = PyObject_RichCompare(__pyx_v_w, __pyx_v_h, Py_LT); __Pyx_XGOTREF(__pyx_t_7); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 43, __pyx_L1_error)
       __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_t_7); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 43, __pyx_L1_error)
@@ -1893,8 +1910,8 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
         /* "library.pyx":44
  * 
  * 			if w < h:
- * 				w += int(20 * )             # <<<<<<<<<<<<<<
- * 				x -= int(10 * )
+ * 				w += int(20 * scale)             # <<<<<<<<<<<<<<
+ * 				x -= int(10 * scale)
  * 			else:
  */
         __pyx_t_7 = PyNumber_Multiply(__pyx_int_20, __pyx_v_scale); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 44, __pyx_L1_error)
@@ -1910,10 +1927,10 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
 
         /* "library.pyx":45
  * 			if w < h:
- * 				w += int(20 * )
- * 				x -= int(10 * )             # <<<<<<<<<<<<<<
+ * 				w += int(20 * scale)
+ * 				x -= int(10 * scale)             # <<<<<<<<<<<<<<
  * 			else:
- * 				h += int(20 * )
+ * 				h += int(20 * scale)
  */
         __pyx_t_7 = PyNumber_Multiply(__pyx_int_10, __pyx_v_scale); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 45, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_7);
@@ -1930,17 +1947,17 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
  * 
  * 
  * 			if w < h:             # <<<<<<<<<<<<<<
- * 				w += int(20 * )
- * 				x -= int(10 * )
+ * 				w += int(20 * scale)
+ * 				x -= int(10 * scale)
  */
         goto __pyx_L8;
       }
 
       /* "library.pyx":47
- * 				x -= int(10 * )
+ * 				x -= int(10 * scale)
  * 			else:
- * 				h += int(20 * )             # <<<<<<<<<<<<<<
- * 				y -= int(10 * )
+ * 				h += int(20 * scale)             # <<<<<<<<<<<<<<
+ * 				y -= int(10 * scale)
  * 
  */
       /*else*/ {
@@ -1957,8 +1974,8 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
 
         /* "library.pyx":48
  * 			else:
- * 				h += int(20 * )
- * 				y -= int(10 * )             # <<<<<<<<<<<<<<
+ * 				h += int(20 * scale)
+ * 				y -= int(10 * scale)             # <<<<<<<<<<<<<<
  * 
  * 			pathway.append((x,y,w,h))
  */
@@ -1976,7 +1993,7 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
       __pyx_L8:;
 
       /* "library.pyx":50
- * 				y -= int(10 * )
+ * 				y -= int(10 * scale)
  * 
  * 			pathway.append((x,y,w,h))             # <<<<<<<<<<<<<<
  * 	return pathway
@@ -2024,7 +2041,7 @@ static PyObject *__pyx_pf_7library_create_pathway(CYTHON_UNUSED PyObject *__pyx_
   /* "library.pyx":24
  * 
  * 
- * def create_pathway(nodes, pathway, ):             # <<<<<<<<<<<<<<
+ * def create_pathway(nodes, pathway, scale):             # <<<<<<<<<<<<<<
  * 	cdef int i
  * 	for i in range(len(nodes)):
  */
@@ -4671,7 +4688,7 @@ static PyObject *__pyx_pf_7library_4determine_pricing(CYTHON_UNUSED PyObject *__
  * 		c += int(see_camo[i]) * 10
  * 		c += projectile_settings[i][0] // 2             # <<<<<<<<<<<<<<
  * 		c += projectile_settings[i][1]
- * 		c *= 2
+ * 		c += projectile_settings[i][2] * 20
  */
     __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_c); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 147, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
@@ -4695,8 +4712,8 @@ static PyObject *__pyx_pf_7library_4determine_pricing(CYTHON_UNUSED PyObject *__
  * 		c += int(see_camo[i]) * 10
  * 		c += projectile_settings[i][0] // 2
  * 		c += projectile_settings[i][1]             # <<<<<<<<<<<<<<
+ * 		c += projectile_settings[i][2] * 20
  * 		c *= 2
- * 		costs.append(c)
  */
     __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_c); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 148, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
@@ -4716,26 +4733,51 @@ static PyObject *__pyx_pf_7library_4determine_pricing(CYTHON_UNUSED PyObject *__
     /* "library.pyx":149
  * 		c += projectile_settings[i][0] // 2
  * 		c += projectile_settings[i][1]
+ * 		c += projectile_settings[i][2] * 20             # <<<<<<<<<<<<<<
+ * 		c *= 2
+ * 		costs.append(c)
+ */
+    __pyx_t_8 = __Pyx_PyInt_From_int(__pyx_v_c); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_8);
+    __pyx_t_6 = __Pyx_GetItemInt(__pyx_v_projectile_settings, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_t_6, 2, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __pyx_t_6 = PyNumber_Multiply(__pyx_t_1, __pyx_int_20); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = PyNumber_InPlaceAdd(__pyx_t_8, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __pyx_t_7 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_7 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 149, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_v_c = __pyx_t_7;
+
+    /* "library.pyx":150
+ * 		c += projectile_settings[i][1]
+ * 		c += projectile_settings[i][2] * 20
  * 		c *= 2             # <<<<<<<<<<<<<<
  * 		costs.append(c)
  * 
  */
     __pyx_v_c = (__pyx_v_c * 2);
 
-    /* "library.pyx":150
- * 		c += projectile_settings[i][1]
+    /* "library.pyx":151
+ * 		c += projectile_settings[i][2] * 20
  * 		c *= 2
  * 		costs.append(c)             # <<<<<<<<<<<<<<
  * 
  * 	return costs
  */
-    __pyx_t_8 = __Pyx_PyInt_From_int(__pyx_v_c); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 150, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_9 = __Pyx_PyList_Append(__pyx_v_costs, __pyx_t_8); if (unlikely(__pyx_t_9 == ((int)-1))) __PYX_ERR(0, 150, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_c); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 151, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_9 = __Pyx_PyList_Append(__pyx_v_costs, __pyx_t_1); if (unlikely(__pyx_t_9 == ((int)-1))) __PYX_ERR(0, 151, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "library.pyx":152
+  /* "library.pyx":153
  * 		costs.append(c)
  * 
  * 	return costs             # <<<<<<<<<<<<<<
@@ -4769,7 +4811,7 @@ static PyObject *__pyx_pf_7library_4determine_pricing(CYTHON_UNUSED PyObject *__
   return __pyx_r;
 }
 
-/* "library.pyx":154
+/* "library.pyx":155
  * 	return costs
  * 
  * def calculate_path_distance(nodes):             # <<<<<<<<<<<<<<
@@ -4813,7 +4855,7 @@ static PyObject *__pyx_pf_7library_6calculate_path_distance(CYTHON_UNUSED PyObje
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("calculate_path_distance", 0);
 
-  /* "library.pyx":155
+  /* "library.pyx":156
  * 
  * def calculate_path_distance(nodes):
  * 	cdef float distance = 0             # <<<<<<<<<<<<<<
@@ -4822,7 +4864,7 @@ static PyObject *__pyx_pf_7library_6calculate_path_distance(CYTHON_UNUSED PyObje
  */
   __pyx_v_distance = 0.0;
 
-  /* "library.pyx":156
+  /* "library.pyx":157
  * def calculate_path_distance(nodes):
  * 	cdef float distance = 0
  * 	prev_node = None             # <<<<<<<<<<<<<<
@@ -4832,7 +4874,7 @@ static PyObject *__pyx_pf_7library_6calculate_path_distance(CYTHON_UNUSED PyObje
   __Pyx_INCREF(Py_None);
   __pyx_v_prev_node = Py_None;
 
-  /* "library.pyx":157
+  /* "library.pyx":158
  * 	cdef float distance = 0
  * 	prev_node = None
  * 	for node in nodes:             # <<<<<<<<<<<<<<
@@ -4843,26 +4885,26 @@ static PyObject *__pyx_pf_7library_6calculate_path_distance(CYTHON_UNUSED PyObje
     __pyx_t_1 = __pyx_v_nodes; __Pyx_INCREF(__pyx_t_1); __pyx_t_2 = 0;
     __pyx_t_3 = NULL;
   } else {
-    __pyx_t_2 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_nodes); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 157, __pyx_L1_error)
+    __pyx_t_2 = -1; __pyx_t_1 = PyObject_GetIter(__pyx_v_nodes); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 158, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 157, __pyx_L1_error)
+    __pyx_t_3 = Py_TYPE(__pyx_t_1)->tp_iternext; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 158, __pyx_L1_error)
   }
   for (;;) {
     if (likely(!__pyx_t_3)) {
       if (likely(PyList_CheckExact(__pyx_t_1))) {
         if (__pyx_t_2 >= PyList_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_4 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 157, __pyx_L1_error)
+        __pyx_t_4 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 158, __pyx_L1_error)
         #else
-        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 157, __pyx_L1_error)
+        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 158, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         #endif
       } else {
         if (__pyx_t_2 >= PyTuple_GET_SIZE(__pyx_t_1)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_4 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 157, __pyx_L1_error)
+        __pyx_t_4 = PyTuple_GET_ITEM(__pyx_t_1, __pyx_t_2); __Pyx_INCREF(__pyx_t_4); __pyx_t_2++; if (unlikely(0 < 0)) __PYX_ERR(0, 158, __pyx_L1_error)
         #else
-        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 157, __pyx_L1_error)
+        __pyx_t_4 = PySequence_ITEM(__pyx_t_1, __pyx_t_2); __pyx_t_2++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 158, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         #endif
       }
@@ -4872,7 +4914,7 @@ static PyObject *__pyx_pf_7library_6calculate_path_distance(CYTHON_UNUSED PyObje
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 157, __pyx_L1_error)
+          else __PYX_ERR(0, 158, __pyx_L1_error)
         }
         break;
       }
@@ -4881,64 +4923,64 @@ static PyObject *__pyx_pf_7library_6calculate_path_distance(CYTHON_UNUSED PyObje
     __Pyx_XDECREF_SET(__pyx_v_node, __pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "library.pyx":158
+    /* "library.pyx":159
  * 	prev_node = None
  * 	for node in nodes:
  * 		if prev_node:             # <<<<<<<<<<<<<<
  * 			dx = node[0] - prev_node[0]
  * 			dy = node[1] - prev_node[1]
  */
-    __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_v_prev_node); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 158, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_IsTrue(__pyx_v_prev_node); if (unlikely(__pyx_t_5 < 0)) __PYX_ERR(0, 159, __pyx_L1_error)
     if (__pyx_t_5) {
 
-      /* "library.pyx":159
+      /* "library.pyx":160
  * 	for node in nodes:
  * 		if prev_node:
  * 			dx = node[0] - prev_node[0]             # <<<<<<<<<<<<<<
  * 			dy = node[1] - prev_node[1]
  * 
  */
-      __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_node, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 159, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_node, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 160, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_6 = __Pyx_GetItemInt(__pyx_v_prev_node, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 159, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_GetItemInt(__pyx_v_prev_node, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 160, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_7 = PyNumber_Subtract(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 159, __pyx_L1_error)
+      __pyx_t_7 = PyNumber_Subtract(__pyx_t_4, __pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 160, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_XDECREF_SET(__pyx_v_dx, __pyx_t_7);
       __pyx_t_7 = 0;
 
-      /* "library.pyx":160
+      /* "library.pyx":161
  * 		if prev_node:
  * 			dx = node[0] - prev_node[0]
  * 			dy = node[1] - prev_node[1]             # <<<<<<<<<<<<<<
  * 
  * 			distance += pythag(dx, dy)
  */
-      __pyx_t_7 = __Pyx_GetItemInt(__pyx_v_node, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 160, __pyx_L1_error)
+      __pyx_t_7 = __Pyx_GetItemInt(__pyx_v_node, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 161, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_7);
-      __pyx_t_6 = __Pyx_GetItemInt(__pyx_v_prev_node, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 160, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_GetItemInt(__pyx_v_prev_node, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 161, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_4 = PyNumber_Subtract(__pyx_t_7, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 160, __pyx_L1_error)
+      __pyx_t_4 = PyNumber_Subtract(__pyx_t_7, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 161, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_XDECREF_SET(__pyx_v_dy, __pyx_t_4);
       __pyx_t_4 = 0;
 
-      /* "library.pyx":162
+      /* "library.pyx":163
  * 			dy = node[1] - prev_node[1]
  * 
  * 			distance += pythag(dx, dy)             # <<<<<<<<<<<<<<
  * 
  * 		prev_node = node
  */
-      __pyx_t_8 = __pyx_PyFloat_AsFloat(__pyx_v_dx); if (unlikely((__pyx_t_8 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 162, __pyx_L1_error)
-      __pyx_t_9 = __pyx_PyFloat_AsFloat(__pyx_v_dy); if (unlikely((__pyx_t_9 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 162, __pyx_L1_error)
+      __pyx_t_8 = __pyx_PyFloat_AsFloat(__pyx_v_dx); if (unlikely((__pyx_t_8 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 163, __pyx_L1_error)
+      __pyx_t_9 = __pyx_PyFloat_AsFloat(__pyx_v_dy); if (unlikely((__pyx_t_9 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 163, __pyx_L1_error)
       __pyx_v_distance = (__pyx_v_distance + __pyx_f_7library_pythag(__pyx_t_8, __pyx_t_9));
 
-      /* "library.pyx":158
+      /* "library.pyx":159
  * 	prev_node = None
  * 	for node in nodes:
  * 		if prev_node:             # <<<<<<<<<<<<<<
@@ -4947,7 +4989,7 @@ static PyObject *__pyx_pf_7library_6calculate_path_distance(CYTHON_UNUSED PyObje
  */
     }
 
-    /* "library.pyx":164
+    /* "library.pyx":165
  * 			distance += pythag(dx, dy)
  * 
  * 		prev_node = node             # <<<<<<<<<<<<<<
@@ -4957,7 +4999,7 @@ static PyObject *__pyx_pf_7library_6calculate_path_distance(CYTHON_UNUSED PyObje
     __Pyx_INCREF(__pyx_v_node);
     __Pyx_DECREF_SET(__pyx_v_prev_node, __pyx_v_node);
 
-    /* "library.pyx":157
+    /* "library.pyx":158
  * 	cdef float distance = 0
  * 	prev_node = None
  * 	for node in nodes:             # <<<<<<<<<<<<<<
@@ -4967,19 +5009,21 @@ static PyObject *__pyx_pf_7library_6calculate_path_distance(CYTHON_UNUSED PyObje
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "library.pyx":166
+  /* "library.pyx":167
  * 		prev_node = node
  * 
  * 	return distance             # <<<<<<<<<<<<<<
+ * 
+ * def scale_array(n, float scale):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_distance); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 166, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_distance); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 167, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "library.pyx":154
+  /* "library.pyx":155
  * 	return costs
  * 
  * def calculate_path_distance(nodes):             # <<<<<<<<<<<<<<
@@ -5000,6 +5044,159 @@ static PyObject *__pyx_pf_7library_6calculate_path_distance(CYTHON_UNUSED PyObje
   __Pyx_XDECREF(__pyx_v_node);
   __Pyx_XDECREF(__pyx_v_dx);
   __Pyx_XDECREF(__pyx_v_dy);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "library.pyx":169
+ * 	return distance
+ * 
+ * def scale_array(n, float scale):             # <<<<<<<<<<<<<<
+ * 	cdef int i
+ * 	for i in range(len(n)):
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_7library_9scale_array(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_7library_9scale_array = {"scale_array", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_7library_9scale_array, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_7library_9scale_array(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_n = 0;
+  float __pyx_v_scale;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("scale_array (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_n,&__pyx_n_s_scale,0};
+    PyObject* values[2] = {0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_n)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_scale)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("scale_array", 1, 2, 2, 1); __PYX_ERR(0, 169, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "scale_array") < 0)) __PYX_ERR(0, 169, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+    }
+    __pyx_v_n = values[0];
+    __pyx_v_scale = __pyx_PyFloat_AsFloat(values[1]); if (unlikely((__pyx_v_scale == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 169, __pyx_L3_error)
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("scale_array", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 169, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("library.scale_array", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_7library_8scale_array(__pyx_self, __pyx_v_n, __pyx_v_scale);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_7library_8scale_array(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_n, float __pyx_v_scale) {
+  int __pyx_v_i;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  Py_ssize_t __pyx_t_1;
+  Py_ssize_t __pyx_t_2;
+  int __pyx_t_3;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  PyObject *__pyx_t_6 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("scale_array", 0);
+
+  /* "library.pyx":171
+ * def scale_array(n, float scale):
+ * 	cdef int i
+ * 	for i in range(len(n)):             # <<<<<<<<<<<<<<
+ * 		n[i] = int(n[i] * scale)
+ * 
+ */
+  __pyx_t_1 = PyObject_Length(__pyx_v_n); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 171, __pyx_L1_error)
+  __pyx_t_2 = __pyx_t_1;
+  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
+    __pyx_v_i = __pyx_t_3;
+
+    /* "library.pyx":172
+ * 	cdef int i
+ * 	for i in range(len(n)):
+ * 		n[i] = int(n[i] * scale)             # <<<<<<<<<<<<<<
+ * 
+ * 	return n
+ */
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_n, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 172, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_5 = PyFloat_FromDouble(__pyx_v_scale); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 172, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_6 = PyNumber_Multiply(__pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 172, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_5 = __Pyx_PyNumber_Int(__pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 172, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    if (unlikely(__Pyx_SetItemInt(__pyx_v_n, __pyx_v_i, __pyx_t_5, int, 1, __Pyx_PyInt_From_int, 0, 1, 1) < 0)) __PYX_ERR(0, 172, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  }
+
+  /* "library.pyx":174
+ * 		n[i] = int(n[i] * scale)
+ * 
+ * 	return n             # <<<<<<<<<<<<<<
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_n);
+  __pyx_r = __pyx_v_n;
+  goto __pyx_L0;
+
+  /* "library.pyx":169
+ * 	return distance
+ * 
+ * def scale_array(n, float scale):             # <<<<<<<<<<<<<<
+ * 	cdef int i
+ * 	for i in range(len(n)):
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_AddTraceback("library.scale_array", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -5074,6 +5271,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_lim, __pyx_k_lim, sizeof(__pyx_k_lim), 0, 0, 1, 1},
   {&__pyx_n_s_look_ahead_node, __pyx_k_look_ahead_node, sizeof(__pyx_k_look_ahead_node), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
+  {&__pyx_n_s_n, __pyx_k_n, sizeof(__pyx_k_n), 0, 0, 1, 1},
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
   {&__pyx_n_s_next_node, __pyx_k_next_node, sizeof(__pyx_k_next_node), 0, 0, 1, 1},
   {&__pyx_n_s_node, __pyx_k_node, sizeof(__pyx_k_node), 0, 0, 1, 1},
@@ -5086,6 +5284,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
   {&__pyx_n_s_ranges, __pyx_k_ranges, sizeof(__pyx_k_ranges), 0, 0, 1, 1},
   {&__pyx_n_s_scale, __pyx_k_scale, sizeof(__pyx_k_scale), 0, 0, 1, 1},
+  {&__pyx_n_s_scale_array, __pyx_k_scale_array, sizeof(__pyx_k_scale_array), 0, 0, 1, 1},
   {&__pyx_n_s_see_camo, __pyx_k_see_camo, sizeof(__pyx_k_see_camo), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_n_s_w, __pyx_k_w, sizeof(__pyx_k_w), 0, 0, 1, 1},
@@ -5109,7 +5308,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "library.pyx":24
  * 
  * 
- * def create_pathway(nodes, pathway, ):             # <<<<<<<<<<<<<<
+ * def create_pathway(nodes, pathway, scale):             # <<<<<<<<<<<<<<
  * 	cdef int i
  * 	for i in range(len(nodes)):
  */
@@ -5142,17 +5341,29 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__5);
   __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(4, 0, 8, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_library_pyx, __pyx_n_s_determine_pricing, 138, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) __PYX_ERR(0, 138, __pyx_L1_error)
 
-  /* "library.pyx":154
+  /* "library.pyx":155
  * 	return costs
  * 
  * def calculate_path_distance(nodes):             # <<<<<<<<<<<<<<
  * 	cdef float distance = 0
  * 	prev_node = None
  */
-  __pyx_tuple__7 = PyTuple_Pack(6, __pyx_n_s_nodes, __pyx_n_s_distance, __pyx_n_s_prev_node, __pyx_n_s_node, __pyx_n_s_dx, __pyx_n_s_dy); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 154, __pyx_L1_error)
+  __pyx_tuple__7 = PyTuple_Pack(6, __pyx_n_s_nodes, __pyx_n_s_distance, __pyx_n_s_prev_node, __pyx_n_s_node, __pyx_n_s_dx, __pyx_n_s_dy); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 155, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
-  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(1, 0, 6, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_library_pyx, __pyx_n_s_calculate_path_distance, 154, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 154, __pyx_L1_error)
+  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(1, 0, 6, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_library_pyx, __pyx_n_s_calculate_path_distance, 155, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 155, __pyx_L1_error)
+
+  /* "library.pyx":169
+ * 	return distance
+ * 
+ * def scale_array(n, float scale):             # <<<<<<<<<<<<<<
+ * 	cdef int i
+ * 	for i in range(len(n)):
+ */
+  __pyx_tuple__9 = PyTuple_Pack(3, __pyx_n_s_n, __pyx_n_s_scale, __pyx_n_s_i); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 169, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__9);
+  __Pyx_GIVEREF(__pyx_tuple__9);
+  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(2, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_library_pyx, __pyx_n_s_scale_array, 169, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 169, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -5441,7 +5652,7 @@ if (!__Pyx_RefNanny) {
   /* "library.pyx":24
  * 
  * 
- * def create_pathway(nodes, pathway, ):             # <<<<<<<<<<<<<<
+ * def create_pathway(nodes, pathway, scale):             # <<<<<<<<<<<<<<
  * 	cdef int i
  * 	for i in range(len(nodes)):
  */
@@ -5474,16 +5685,28 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_determine_pricing, __pyx_t_1) < 0) __PYX_ERR(0, 138, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "library.pyx":154
+  /* "library.pyx":155
  * 	return costs
  * 
  * def calculate_path_distance(nodes):             # <<<<<<<<<<<<<<
  * 	cdef float distance = 0
  * 	prev_node = None
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7library_7calculate_path_distance, NULL, __pyx_n_s_library); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 154, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7library_7calculate_path_distance, NULL, __pyx_n_s_library); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 155, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_calculate_path_distance, __pyx_t_1) < 0) __PYX_ERR(0, 154, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_calculate_path_distance, __pyx_t_1) < 0) __PYX_ERR(0, 155, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "library.pyx":169
+ * 	return distance
+ * 
+ * def scale_array(n, float scale):             # <<<<<<<<<<<<<<
+ * 	cdef int i
+ * 	for i in range(len(n)):
+ */
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_7library_9scale_array, NULL, __pyx_n_s_library); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 169, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_scale_array, __pyx_t_1) < 0) __PYX_ERR(0, 169, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "library.pyx":1
@@ -6533,6 +6756,55 @@ static PyObject* __Pyx_PyInt_FloorDivideObjC(PyObject *op1, PyObject *op2, CYTHO
     return (inplace ? PyNumber_InPlaceFloorDivide : PyNumber_FloorDivide)(op1, op2);
 }
 #endif
+
+/* SetItemInt */
+static int __Pyx_SetItemInt_Generic(PyObject *o, PyObject *j, PyObject *v) {
+    int r;
+    if (!j) return -1;
+    r = PyObject_SetItem(o, j, v);
+    Py_DECREF(j);
+    return r;
+}
+static CYTHON_INLINE int __Pyx_SetItemInt_Fast(PyObject *o, Py_ssize_t i, PyObject *v, int is_list,
+                                               CYTHON_NCP_UNUSED int wraparound, CYTHON_NCP_UNUSED int boundscheck) {
+#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS && CYTHON_USE_TYPE_SLOTS
+    if (is_list || PyList_CheckExact(o)) {
+        Py_ssize_t n = (!wraparound) ? i : ((likely(i >= 0)) ? i : i + PyList_GET_SIZE(o));
+        if ((!boundscheck) || likely(__Pyx_is_valid_index(n, PyList_GET_SIZE(o)))) {
+            PyObject* old = PyList_GET_ITEM(o, n);
+            Py_INCREF(v);
+            PyList_SET_ITEM(o, n, v);
+            Py_DECREF(old);
+            return 1;
+        }
+    } else {
+        PySequenceMethods *m = Py_TYPE(o)->tp_as_sequence;
+        if (likely(m && m->sq_ass_item)) {
+            if (wraparound && unlikely(i < 0) && likely(m->sq_length)) {
+                Py_ssize_t l = m->sq_length(o);
+                if (likely(l >= 0)) {
+                    i += l;
+                } else {
+                    if (!PyErr_ExceptionMatches(PyExc_OverflowError))
+                        return -1;
+                    PyErr_Clear();
+                }
+            }
+            return m->sq_ass_item(o, i, v);
+        }
+    }
+#else
+#if CYTHON_COMPILING_IN_PYPY
+    if (is_list || (PySequence_Check(o) && !PyDict_Check(o)))
+#else
+    if (is_list || PySequence_Check(o))
+#endif
+    {
+        return PySequence_SetItem(o, i, v);
+    }
+#endif
+    return __Pyx_SetItemInt_Generic(o, PyInt_FromSsize_t(i), v);
+}
 
 /* PyDictVersioning */
 #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_TYPE_SLOTS

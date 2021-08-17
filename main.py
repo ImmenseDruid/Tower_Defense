@@ -35,11 +35,11 @@ clock = pygame.time.Clock()
 #Tower Stats
 
 
-tower_ranges = [250, 350, 200, 250]
-tower_attack_cooldown = [1000, 2000, 1500, 1000]
-tower_can_see_camo = [False, True, False, True]
-#projectile settings per tower [explosion radius, pierce]
-tower_projectile_settings = [[0, 2], [100, 0], [200, 0], [0, 0]]
+tower_ranges = [250, 350, 200, 250, 150]
+tower_attack_cooldown = [1000, 2000, 1500, 1000, 750]
+tower_can_see_camo = [False, True, False, True, False]
+#projectile settings per tower [explosion radius, pierce, slow amount]
+tower_projectile_settings = [[0, 2, 0], [100, 0, 0], [200, 0, 0], [0, 0, 0], [0, 0, 3]]
 
 tower_costs = library.determine_pricing(tower_ranges, tower_attack_cooldown, tower_can_see_camo, tower_projectile_settings)
 
@@ -77,16 +77,18 @@ font_60 = pygame.font.SysFont('Times New Roman', 60)
 tower_imgs = [[pygame.image.load('Images/Tower1.png').convert_alpha(), pygame.image.load('Images/Tower1_upgrade.png').convert_alpha(), pygame.image.load('Images/Tower1_upgrade_2.png').convert_alpha()],
  [pygame.image.load('Images/Tower_2_no_cape.png').convert_alpha(), pygame.image.load('Images/Tower_2_no_hat.png').convert_alpha(), pygame.image.load('Images/Tower_2.png').convert_alpha()],
  [pygame.image.load('Images/Tower_3.png').convert_alpha(), pygame.image.load('Images/Tower_3_upgrade.png').convert_alpha(), pygame.image.load('Images/Tower_3_upgrade_2.png').convert_alpha()],
- [pygame.image.load('Images/Tower_4.png').convert_alpha(), pygame.image.load('Images/Tower_4_upgrade.png').convert_alpha(), pygame.image.load('Images/Tower_4_upgrade_2.png').convert_alpha()]]
+ [pygame.image.load('Images/Tower_4.png').convert_alpha(), pygame.image.load('Images/Tower_4_upgrade.png').convert_alpha(), pygame.image.load('Images/Tower_4_upgrade_2.png').convert_alpha()],
+ [pygame.image.load('Images/Tower_5.png').convert_alpha(), pygame.image.load('Images/Tower_5_upgrade.png').convert_alpha(), pygame.image.load('Images/Tower_5_upgrade_2.png').convert_alpha()]]
 bullet_imgs = [pygame.image.load('Images/Bullet_1.png').convert_alpha(), pygame.transform.scale(pygame.image.load('Images/Bullet_2.png').convert_alpha(), (8, 8)),
- pygame.transform.scale(pygame.image.load('Images/Bullet_3.png').convert_alpha(), (8, 8)), pygame.transform.scale(pygame.image.load('Images/Bullet_4.png').convert_alpha(), (8, 8))]
+ pygame.transform.scale(pygame.image.load('Images/Bullet_3.png').convert_alpha(), (8, 8)), pygame.transform.scale(pygame.image.load('Images/Bullet_4.png').convert_alpha(), (8, 8)),
+ pygame.transform.scale(pygame.image.load('Images/Bullet_5.png').convert_alpha(), (8, 8))]
 balloon_imgs = [pygame.image.load('Images/Balloon_1.png').convert_alpha(), pygame.image.load('Images/Balloon_2.png').convert_alpha(), pygame.image.load('Images/Balloon_3.png').convert_alpha(),
  pygame.image.load('Images/Balloon_4.png').convert_alpha(), pygame.image.load('Images/Balloon_5.png').convert_alpha()]
 
 camo_img = pygame.image.load('Images/camo.png').convert_alpha()
 camo_img = pygame.transform.scale(camo_img, (int(camo_img.get_width() * scale), int(camo_img.get_height() * scale))).convert_alpha()
 
-
+pygame.display.set_icon(balloon_imgs[0])
 entities.Balloon.IMGS = balloon_imgs
 
 for i in range(len(tower_imgs)):
@@ -310,7 +312,8 @@ def main():
 	tower_buttons = [Button(int(20 * scale), int(620 * scale), (25, 25), img = create_tower_button_img(0)),
 		Button(int(70 * scale), int(620 * scale), (25, 25), img = create_tower_button_img(1)),
 		Button(int(120 * scale), int(620 * scale), (25, 25), img = create_tower_button_img(2)),
-		Button(int(170 * scale), int(620 * scale), (25, 25), img = create_tower_button_img(3))]
+		Button(int(170 * scale), int(620 * scale), (25, 25), img = create_tower_button_img(3)),
+		Button(int(220 * scale), int(620 * scale), (25, 25), img = create_tower_button_img(4))]
 
 	#Upgrade / Sell Button
 	upgrade_button = Button(int(650 * scale), int(425 * scale), (200, 50), img = button_upgrade_img)
@@ -391,7 +394,7 @@ def main():
 
 		if tower_selected:
 			if upgrade_button.draw(screen):
-				if money >= 100:
+				if money >= 100 and tower_selected.level < tower_selected.max_level:
 					tower_selected.upgrade()
 					money -= 100
 
