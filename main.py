@@ -19,7 +19,7 @@ BORDER = nyx8[6]
 GROUND = nyx8[0]
 PATH = nyx8[0]
 
-scale = 1.5
+scale = 1.0
 width = int(900 * scale)
 height = int(800 * scale)
 
@@ -30,17 +30,21 @@ pygame.font.init()
 screen = pygame.display.set_mode((width , height))
 pygame.display.set_caption("Tower Defense Game")
 
+#Icons
+icon_imgs = [pygame.image.load('Images/play_icon.png').convert_alpha(), pygame.image.load('Images/settings_icon.png').convert_alpha(), pygame.image.load('Images/level_select_icon.png').convert_alpha(), pygame.image.load('Images/quit_icon.png').convert_alpha()]
+
+
 #Tower Stats
-
-
-tower_ranges = [250, 350, 200, 250, 150]
+tower_ranges = [166, 233, 133, 166, 100]
 tower_attack_cooldown = [1000, 2000, 1500, 1000, 750]
 tower_can_see_camo = [False, True, False, True, False]
 #projectile settings per tower [explosion radius, pierce, slow amount]
 tower_projectile_settings = [[0, 2, 0], [100, 0, 0], [200, 0, 0], [0, 0, 0], [0, 0, 3]]
 
-tower_costs = library.determine_pricing(tower_ranges, tower_attack_cooldown, tower_can_see_camo, tower_projectile_settings)
 
+
+tower_costs = library.determine_pricing(tower_ranges, tower_attack_cooldown, tower_can_see_camo, tower_projectile_settings)
+tower_ranges = library.scale_array(tower_ranges, scale)
 
 #Images
 
@@ -65,7 +69,7 @@ path_distance = library.calculate_path_distance(nodes)
 
 pathway = library.create_pathway(nodes, pathway, scale)
 
-spawn = [int(-10 * scale), int(50 * scale)]
+spawn = nodes[0]
 
 
 font = pygame.font.SysFont('Times New Roman', 30)
@@ -99,6 +103,8 @@ for i in range(len(bullet_imgs)):
 for i in range(len(balloon_imgs)):
 	balloon_imgs[i] = pygame.transform.scale(balloon_imgs[i], (int(balloon_imgs[i].get_width() * scale), int(balloon_imgs[i].get_height() * scale))).convert_alpha()
 
+for i in range(len(icon_imgs)):
+	icon_imgs[i] = pygame.transform.scale(icon_imgs[i], (int(icon_imgs[i].get_width() * scale), int(icon_imgs[i].get_height() * scale))).convert_alpha()
 
 def draw_text(text, font, text_col, x, y):
 	img = font.render(text, True, text_col)
@@ -117,7 +123,6 @@ class SpriteSheet():
 		 surf = pygame.transform.scale(surf, (int(self.size[0] * scale), int(self.size[1] * scale)))
 		 surf.set_colorkey((200, 20, 200))
 		 return surf.convert_alpha()
-
 
 class Button():
 
@@ -237,33 +242,36 @@ class Wave_manager():
 		
 
 	def update(self):
-		if len(self.balloon_group) == 0 and self.endofwave:
-			self.wave += 1
-			self.spawn_cooldown_reduction = plibrary.lerp(0, 1000, plibrary.alerp(0, 60, self.wave))
-			self.last_wave = pygame.time.get_ticks()
-			self.balloon_type_idx = 0
-			self.endofwave = False
-			
-
-		spawn_timer = pygame.time.get_ticks() - self.last_spawn > (self.SPAWN_COOLDOWN - self.spawn_cooldown_reduction)
-		wave_timer = pygame.time.get_ticks() - self.last_wave > self.WAVE_DELAY
-
-		if not wave_timer:
-			draw_text("Wave Complete", font_60, WHITE, int(300 * scale), int(scale * 300))
-
-		if self.wave_data:
-			if spawn_timer and wave_timer and not self.endofwave:
-							
-				self.balloon_group.add(entities.Balloon(spawn[0], spawn[1], self.balloon_type_idx + 1, nodes, path_distance, self.wave_data[self.wave][self.balloon_type_idx][1], camo_img))
-				self.last_spawn = pygame.time.get_ticks()
+		if self.wave < len(self.wave_data):
+			if len(self.balloon_group) == 0 and self.endofwave:
+				self.wave += 1
+				self.spawn_cooldown_reduction = plibrary.mylerp(0, 1000, plibrary.myalerp(0, 60, self.wave))
+				self.last_wave = pygame.time.get_ticks()
+				self.balloon_type_idx = 0
+				self.endofwave = False
 				
-				self.counter += 1
-				if self.counter >= self.wave_data[self.wave][self.balloon_type_idx][0]:
-					self.counter = 0
-					self.balloon_type_idx += 1
 
-				if self.balloon_type_idx >= len(self.wave_data[self.wave]):
-					self.endofwave = True
+			spawn_timer = pygame.time.get_ticks() - self.last_spawn > (self.SPAWN_COOLDOWN - self.spawn_cooldown_reduction)
+			wave_timer = pygame.time.get_ticks() - self.last_wave > self.WAVE_DELAY
+
+			if not wave_timer:
+				draw_text("Wave Complete", font_60, WHITE, int(300 * scale), int(scale * 300))
+
+			if self.wave_data:
+				if spawn_timer and wave_timer and not self.endofwave:
+								
+					self.balloon_group.add(entities.Balloon(spawn[0], spawn[1], self.balloon_type_idx + 1, nodes, path_distance, self.wave_data[self.wave][self.balloon_type_idx][1], camo_img))
+					self.last_spawn = pygame.time.get_ticks()
+					
+					self.counter += 1
+					if self.counter >= self.wave_data[self.wave][self.balloon_type_idx][0]:
+						self.counter = 0
+						self.balloon_type_idx += 1
+
+					if self.balloon_type_idx >= len(self.wave_data[self.wave]):
+						self.endofwave = True
+		else:
+			print('Level Complete')
 			
 			
 
@@ -281,6 +289,11 @@ def create_tower_button_img(tower_img):
 	img = pygame.Surface((int(48 * scale), int(48 * scale)))
 	img.blit(button_background, (0,0))
 	img.blit(tower_imgs[tower_img][0], (0,0))
+	return img
+def create_icon_button_img(icon_img):
+	img = pygame.Surface((int(48 * scale), int(48 * scale)))
+	img.blit(button_background, (0,0))
+	img.blit(icon_imgs[icon_img], (0,0))
 	return img
 
 
@@ -459,5 +472,73 @@ def main():
 		
 		pygame.display.update()
 
+def level_select():
+	run = True
+
+	while run:
+		clock.tick(60)
+		screen.fill(GROUND)
+
+		for event in pygame.event.get():
+			if event.type == QUIT:
+				run = False
+
+		pygame.display.update()
+
+
+def settings():
+	run = True
+	upscale_button = Button(int(300 * scale), int(300 * scale), (25, 25), img = create_icon_button_img(0))
+	downscale_button = Button(int(300 * scale), int(300 * scale), (25, 25), img = create_icon_button_img(0))
+
+
+	while run:
+		clock.tick(60)
+		screen.fill(GROUND)
+
+		for event in pygame.event.get():
+			if event.type == QUIT:
+				run = False
+
+		if upscale_button.draw(screen):
+			scale += 0.1
+
+		if downscale_button.draw(screen):
+			scale -= 0.1
+
+		pygame.display.update()
+
+
+def main_menu():
+	run = True
+
+	play_button = Button(int(300 * scale), int(300 * scale), (25, 25), img = create_icon_button_img(0))
+	level_select_button = Button(int(300 * scale), int(350 * scale), (25, 25), img = create_icon_button_img(2))
+	settings_button = Button(int(300 * scale), int(400 * scale), (25, 25), img = create_icon_button_img(1))
+	quit_button = Button(int(300 * scale), int(450 * scale), (25, 25), img = create_icon_button_img(3))
+
+	while run:
+		clock.tick(60)
+		screen.fill(GROUND)
+
+		for event in pygame.event.get():
+			if event.type == QUIT:
+				run = False
+
+		if play_button.draw(screen):
+			main()
+
+		if level_select_button.draw(screen):
+			level_select()
+
+		if settings_button.draw(screen):
+			settings()
+
+		if quit_button.draw(screen):
+			run = False
+
+		pygame.display.update()
+
+
 if __name__ == '__main__':
-	main()
+	main_menu()

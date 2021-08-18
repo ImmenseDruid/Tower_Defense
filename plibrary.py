@@ -21,10 +21,10 @@ def sqrt(x):
 def pythag(x, y):
 	return sqrt(x * x + y * y)
 
-def lerp(x, y, z):
+def mylerp(x, y, z):
 	return (x * (1-z) + y * (z))
 
-def alerp(x,y,z):
+def myalerp(x,y,z):
 	return (z - x) / (x + y)
 
 
@@ -163,10 +163,10 @@ def calculate_path_distance(nodes):
 
 	return distance
 
-def create_wave_data():
+def create_wave_data(level):
 	waves = []
 
-	for wave in range(60):
+	for wave in range(5):
 		waves.append([])
 		for balloon_type in range(5):
 			amount = wave * wave
@@ -174,7 +174,7 @@ def create_wave_data():
 			waves[wave].append([amount, camo])
 			
 
-	with open(os.path.join('waves', f'waves_map_0_data.p'), 'wb') as file:
+	with open(os.path.join('waves', f'waves_map_{level}_data.p'), 'wb') as file:
 		pickle.dump(waves, file)
 
 def get_wave_data():
