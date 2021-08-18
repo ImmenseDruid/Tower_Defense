@@ -20,15 +20,29 @@ GROUND = nyx8[0]
 PATH = nyx8[0]
 
 scale = 1.0
-width = int(900 * scale)
-height = int(800 * scale)
+music_volume, sfx_volume = 1, 1
+
 
 pygame.init()
 pygame.font.init()
 
+settings = []
+
+with open('settings_data.p', 'rb') as file:
+	settings = pickle.load(file)
+
+scale = settings[0]
+music_volume = settings[1]
+sfx_volume = settings[2]
+
+width = int(900 * scale)
+height = int(800 * scale)
 
 screen = pygame.display.set_mode((width , height))
 pygame.display.set_caption("Tower Defense Game")
+
+
+pygame.mixer.music.set_volume(music_volume)
 
 #Icons
 icon_imgs = [pygame.image.load('Images/play_icon.png').convert_alpha(), pygame.image.load('Images/settings_icon.png').convert_alpha(), pygame.image.load('Images/level_select_icon.png').convert_alpha(), pygame.image.load('Images/quit_icon.png').convert_alpha()]
@@ -486,11 +500,16 @@ def level_select():
 		pygame.display.update()
 
 
-def settings():
+def settings_menu():
 	run = True
-	upscale_button = Button(int(300 * scale), int(300 * scale), (25, 25), img = create_icon_button_img(0))
-	downscale_button = Button(int(300 * scale), int(300 * scale), (25, 25), img = create_icon_button_img(0))
-
+	global scale, settings, music_volume, sfx_volume
+	upscale_button = Button(int(200 * scale), int(300 * scale), (25, 25), img = pygame.image.load("Images/increment_up_icon.png"))
+	downscale_button = Button(int(600 * scale), int(300 * scale), (25, 25), img = pygame.image.load("Images/decrement_up_icon.png"))
+	upmusic_button = Button(int(200 * scale), int(400 * scale), (25, 25), img = pygame.image.load("Images/increment_up_icon.png"))
+	downmusic_button = Button(int(600 * scale), int(400 * scale), (25, 25), img = pygame.image.load("Images/decrement_up_icon.png"))
+	upsfx_button = Button(int(200 * scale), int(500 * scale), (25, 25), img = pygame.image.load("Images/increment_up_icon.png"))
+	downsfx_button = Button(int(600 * scale), int(500 * scale), (25, 25), img = pygame.image.load("Images/decrement_up_icon.png"))
+	save_button = Button(int(300 * scale), int(600 * scale), (25, 25), img = create_icon_button_img(0))
 
 	while run:
 		clock.tick(60)
@@ -502,9 +521,45 @@ def settings():
 
 		if upscale_button.draw(screen):
 			scale += 0.1
+			if scale > 2:
+				scale = 2
 
 		if downscale_button.draw(screen):
 			scale -= 0.1
+			if scale < .5:
+				scale = .5
+
+		if upmusic_button.draw(screen):
+			music_volume += 0.1
+			if music_volume > 1:
+				music_volume = 1
+
+		if downmusic_button.draw(screen):
+			music_volume -= 0.1
+			if music_volume < 0:
+				music_volume = 0
+
+		if upsfx_button.draw(screen):
+			sfx_volume += 0.1
+			if sfx_volume > 1:
+				sfx_volume = 1
+
+		if downsfx_button.draw(screen):
+			sfx_volume -= 0.1
+			if sfx_volume < 0:
+				sfx_volume = 0
+
+		if save_button.draw(screen):
+
+			pygame.mixer.music.set_volume(music_volume)
+			settings = [scale, music_volume, sfx_volume]
+			with open( f'settings_data.p', 'wb') as file:
+				pickle.dump(settings, file)
+
+
+		draw_text(f'scale : {scale}', font, WHITE, int(400 * scale), int(300 * scale))
+		draw_text(f'Music Volume : {music_volume}', font, WHITE, int(400 * scale), int(400 * scale))
+		draw_text(f'SFX Volume : {sfx_volume}', font, WHITE, int(400 * scale), int(500 * scale))
 
 		pygame.display.update()
 
@@ -516,6 +571,11 @@ def main_menu():
 	level_select_button = Button(int(300 * scale), int(350 * scale), (25, 25), img = create_icon_button_img(2))
 	settings_button = Button(int(300 * scale), int(400 * scale), (25, 25), img = create_icon_button_img(1))
 	quit_button = Button(int(300 * scale), int(450 * scale), (25, 25), img = create_icon_button_img(3))
+	music_name = 'Mysterious'
+	pygame.mixer.music.load(os.path.join("Music", f"JDB - {music_name}.ogg"))
+
+
+	pygame.mixer.music.play(-1)
 
 	while run:
 		clock.tick(60)
@@ -532,7 +592,7 @@ def main_menu():
 			level_select()
 
 		if settings_button.draw(screen):
-			settings()
+			settings_menu()
 
 		if quit_button.draw(screen):
 			run = False
