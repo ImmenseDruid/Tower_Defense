@@ -17,7 +17,7 @@ TEXT_COL = nyx8[0]
 PANEL = nyx8[5]
 BORDER = nyx8[6]
 GROUND = nyx8[0]
-PATH = nyx8[0]
+PATH = nyx8[2]
 
 scale = 1.0
 music_volume, sfx_volume = 1, 1
@@ -87,6 +87,7 @@ def load_map(n):
 
 	for n in data:
 		for i in range(len(n)):
+
 			n[i] = int(n[i] * scale)
 
 	nodes = data
@@ -275,7 +276,8 @@ class Wave_manager():
 		if self.wave < len(self.wave_data):
 			if len(self.balloon_group) == 0 and self.endofwave:
 				self.wave += 1
-				self.spawn_cooldown_reduction = plibrary.mylerp(0, 1000, plibrary.myalerp(0, 60, self.wave))
+
+				self.spawn_cooldown_reduction = plibrary.mylerp(0, 900, plibrary.myalerp(0, 3, self.wave))
 				self.last_wave = pygame.time.get_ticks()
 				self.balloon_type_idx = 0
 				self.endofwave = False
@@ -405,7 +407,13 @@ def main():
 	tower_selected = None
 	clicked_at = None
 
-	pathway_display = library.create_array_to_display_pathway(nodes, pathway_imgs)
+	#pathway_display = library.create_array_to_display_pathway(nodes, pathway_imgs)
+	path_surface = pygame.Surface((int(600 * scale), int(600 * scale)))
+	path_surface.set_colorkey(BLACK)
+	pygame.draw.lines(path_surface, nyx8[0], False, nodes, int(20 * scale))
+	pygame.draw.lines(path_surface, PATH, False, nodes, int(10 * scale))
+
+	path_mask = pygame.mask.from_surface(path_surface)
 
 
 	return_to_game_button = Button(int(50 * scale), int(20 * scale), (25, 25), img = create_icon_button_img(0))
@@ -425,8 +433,13 @@ def main():
 		#Draw everything that is normally drawn.... thats a great comment
 
 		#Draw Pathway
-		for pic in pathway_display:
-			screen.blit(pic[0], pic[1])		
+		#for pic in pathway_display:
+		#	screen.blit(pic[0], pic[1])
+		
+		screen.blit(path_surface, (0,0))
+		#screen.blit(pygame.mask.Mask.to_surface(path_mask), (0,0))
+
+
 
 		if tower_selected:
 			tower_selected.draw(screen)
@@ -594,9 +607,9 @@ def main():
 					img.blit(tower_imgs[tower_to_place][0], (0,0))
 					img.set_colorkey((0,0,0))
 					rect = pygame.Rect(((pos[0] - size[0] // 2, pos[1] - size[1] // 2)), (size))
-
+					mask = pygame.mask.from_surface(img)
 					collide = False
-					colliding_with_pathway = rect.collidelistall(pathway)
+					colliding_with_pathway = path_mask.overlap(mask, (pos[0] - size[0] // 2, pos[1] - size[1] // 2))
 					tower_rects = []
 					for t in tower_group:
 						tower_rects.append(t.rect)

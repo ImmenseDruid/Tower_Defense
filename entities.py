@@ -1,4 +1,4 @@
-import pygame, pickle, math
+import pygame, pickle, math, library
 import random
 
 def limit(x, y, z):
@@ -233,7 +233,7 @@ class Balloon(Entity):
 		self.health -= 1
 		self.speed = health_to_speed(self.health)
 		self.image = self.IMGS[limit(self.health - 1, 0, len(self.IMGS) - 1)]
-		for i in range(10):
+		for i in range(0):
 			self.particles.append(Particle([self.x, self.y], [random.random() * 2 - 1 + self.dx, random.random() * 2 - 1 + self.dy]))
 		if self.health <= 0:
 			self.alive = False
@@ -259,9 +259,15 @@ class Balloon(Entity):
 
 			self.dx = (self.target[0] - self.x)
 			self.dy = (self.target[1] - self.y)
-			self.dx = limit(self.dx, -self.speed, self.speed)
-			self.dy = limit(self.dy, -self.speed, self.speed)
-			if abs(self.dx) < self.ACCEPTABLE_RANGE and abs(self.dy) < self.ACCEPTABLE_RANGE:
+			dist = library.pythag(abs(self.dx), abs(self.dy))
+			new_dist = dist if dist < self.speed else self.speed
+			scale_factor = (new_dist / dist) if dist > 0 else 0
+			self.dx *= scale_factor
+			self.dy *= scale_factor
+
+
+
+			if library.pythag(abs(self.dx), abs(self.dy)) < self.ACCEPTABLE_RANGE:
 				self.target_idx += 1
 				if self.target_idx >= len(self.path):
 					self.enabled = False

@@ -24,8 +24,21 @@ def pythag(x, y):
 def mylerp(x, y, z):
 	return (x * (1-z) + y * (z))
 
+def limit(x, y, z):
+	if z < y:
+		z = y 
+	if z > x:
+		z = x 
+
+	return x
 def myalerp(x,y,z):
-	return (z - x) / (x + y)
+	x = limit(x, y, z)
+	print(f'dummb {x} and dumber {z}')
+	a = z - x
+	print(a)
+	b = x + y
+	print(b)
+	return a / b
 
 
 
