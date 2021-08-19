@@ -122,7 +122,7 @@ class Tower(Entity):
 			self.angle = math.degrees(math.atan2(y_dist, x_dist))
 
 			
-			bullet = Bullet(self.rect.centerx, self.rect.centery, self.angle, self.bullet_img, self.projectile_settings[0])
+			bullet = Bullet(self.rect.centerx, self.rect.centery, self.angle, self.bullet_img, self.projectile_settings)
 			bullet_group.add(bullet)
 
 			self.fired_last = pygame.time.get_ticks()
@@ -131,7 +131,6 @@ class Tower(Entity):
 		self.level += 1 
 		self.level = limit(self.level, 1, self.max_level)
 		self.image = self.imgs[self.level - 1]
-
 
 	def draw(self, screen):
 		if self.selected:
@@ -148,16 +147,17 @@ class Tower(Entity):
 
 
 class Bullet(Entity):
-	def __init__(self, x, y, angle, img = None, explosion_radius = 0, pierce = 0, slow_amount = 0):
+	def __init__(self, x, y, angle, img = None, settings = []):
 		if not img:
 			size = (25, 25)
 			img = pygame.Surface(size)
 			pygame.draw.rect(img, (0, 0, 255), ((0,0), size))
-		self.pierce = pierce
-		self.explosion_radius = explosion_radius
-		self.slow_amount = slow_amount
+		self.speed = settings[0]	
+		self.explosion_radius = settings[1]
+		self.pierce = settings[2]
+		self.slow_amount = settings[3]
 		self.angle = math.radians(angle)
-		self.speed = 10 
+		
 		self.dx = math.cos(self.angle) * self.speed
 		self.dy = -math.sin(self.angle) * self.speed
 		self.life_time = 2000
@@ -239,7 +239,7 @@ class Balloon(Entity):
 			self.alive = False
 
 	def slow(self, amount):
-		self.speed = health_to_speed(self.health - 2)
+		self.speed = health_to_speed(self.health - amount)
 		
 
 

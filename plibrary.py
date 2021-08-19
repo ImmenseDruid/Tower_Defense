@@ -166,7 +166,7 @@ def calculate_path_distance(nodes):
 def create_wave_data(level):
 	waves = []
 
-	for wave in range(5):
+	for wave in range(30):
 		waves.append([])
 		for balloon_type in range(5):
 			amount = wave * wave
@@ -189,3 +189,17 @@ def scale_array(arr, scale):
 		n[i] = int(n[i] * scale)
 
 	return n
+
+
+def generate_to_infinity():
+	waves = []
+	# 300 ~= INF if we get this far you have too much time on your hands...
+	# after a few seconds of googling and determined that 999 ~= INF
+	for wave in range(999):
+		waves.append([])
+		for balloon_type in range(5):
+			amount = wave * wave
+			camo = False if not wave % 5 == 0 else True
+			waves[wave].append([amount, camo])
+
+	return waves
